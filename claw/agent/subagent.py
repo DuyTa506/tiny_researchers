@@ -151,7 +151,6 @@ class SubagentManager:
         from claw.agent.tools.web import WebSearchTool, WebFetchTool
         from claw.agent.tools.paper_search import PaperSearchTool
         from claw.agent.tools.paper_read import PaperReadTool
-        from claw.agent.tools.dataset_search import DatasetSearchTool
 
         registry = ToolRegistry()
 
@@ -170,7 +169,6 @@ class SubagentManager:
         # Research tools
         registry.register(PaperSearchTool())
         registry.register(PaperReadTool())
-        registry.register(DatasetSearchTool())
 
         # Extra tools for specific tasks
         if extra_tools:

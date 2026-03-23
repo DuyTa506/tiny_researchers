@@ -33,6 +33,8 @@ from claw.agent.tools.registry import ToolRegistry
 from claw.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool
 from claw.agent.tools.exec_tool import ExecTool
 from claw.agent.tools.web import WebSearchTool, WebFetchTool
+from claw.agent.tools.paper_search import PaperSearchTool
+from claw.agent.tools.paper_read import PaperReadTool
 
 # Phase 2 — Reproduction tools (imported lazily to avoid hard dependency)
 try:
@@ -112,6 +114,10 @@ class AgentLoop:
         # Web tools
         self.tools.register(WebSearchTool())
         self.tools.register(WebFetchTool())
+
+        # Research tools
+        self.tools.register(PaperSearchTool())
+        self.tools.register(PaperReadTool())
 
         # Phase 2 — Reproduction tools
         if _PHASE2_TOOLS_AVAILABLE:

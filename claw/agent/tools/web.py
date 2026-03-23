@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from html import unescape
 from typing import Any
@@ -16,7 +17,8 @@ _USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
-_MAX_FETCH_CHARS = 8000
+_MAX_FETCH_CHARS = 16_000
+_MAX_RETRIES = 3
 
 
 class WebSearchTool(Tool):
@@ -152,44 +154,73 @@ class WebFetchTool(Tool):
         url: str = kwargs["url"]
         logger.info("web_fetch: url={!r}", url)
 
-        try:
-            async with httpx.AsyncClient(
-                timeout=25.0,
-                follow_redirects=True,
-                headers={"User-Agent": _USER_AGENT},
-            ) as client:
-                resp = await client.get(url)
-                resp.raise_for_status()
-                content_type = resp.headers.get("content-type", "")
+        last_error: str = ""
+        for attempt in range(_MAX_RETRIES):
+            try:
+                async with httpx.AsyncClient(
+                    timeout=25.0,
+                    follow_redirects=True,
+                    headers={"User-Agent": _USER_AGENT},
+                ) as client:
+                    resp = await client.get(url)
 
-                if "text/html" in content_type or "text/plain" in content_type or not content_type:
-                    text = resp.text
-                else:
-                    return f"Error: URL returned non-text content type: {content_type}"
-        except httpx.HTTPStatusError as exc:
-            logger.error("web_fetch HTTP error: {}", exc)
-            return f"Error: URL returned status {exc.response.status_code}."
-        except httpx.RequestError as exc:
-            logger.error("web_fetch request error: {}", exc)
-            return f"Error: Could not fetch URL — {exc}"
-        except Exception as exc:
-            logger.error("web_fetch unexpected error: {}", exc)
-            return f"Error: Failed to fetch URL — {exc}"
+                    # Rate limit — backoff and retry
+                    if resp.status_code == 429:
+                        retry_after = int(resp.headers.get("Retry-After", 0))
+                        wait = retry_after if retry_after > 0 else min(10 * (2 ** attempt), 60)
+                        logger.warning("web_fetch 429 rate limited, waiting {}s (attempt {})", wait, attempt + 1)
+                        await asyncio.sleep(wait)
+                        last_error = f"Error: URL returned status 429 (rate limited)."
+                        continue
 
-        # Strip HTML tags for readable text
-        clean = _strip_html(text)
-        # Collapse excessive whitespace
-        clean = re.sub(r"\n{3,}", "\n\n", clean)
-        clean = re.sub(r" {2,}", " ", clean)
-        clean = clean.strip()
+                    # Server error — backoff and retry
+                    if resp.status_code >= 500:
+                        wait = 5 * (attempt + 1)
+                        logger.warning("web_fetch {} server error, waiting {}s (attempt {})", resp.status_code, wait, attempt + 1)
+                        await asyncio.sleep(wait)
+                        last_error = f"Error: URL returned status {resp.status_code}."
+                        continue
 
-        if not clean:
-            return "Error: Page returned no readable text content."
+                    resp.raise_for_status()
+                    content_type = resp.headers.get("content-type", "")
 
-        if len(clean) > _MAX_FETCH_CHARS:
-            clean = clean[:_MAX_FETCH_CHARS] + f"\n\n... [truncated at {_MAX_FETCH_CHARS} chars]"
+                    # Return JSON as-is (for API responses)
+                    if "application/json" in content_type:
+                        text = resp.text
+                        if len(text) > _MAX_FETCH_CHARS:
+                            text = text[:_MAX_FETCH_CHARS] + f"\n\n... [truncated at {_MAX_FETCH_CHARS} chars]"
+                        return f"Content from {url}:\n\n{text}"
 
-        return f"Content from {url}:\n\n{clean}"
+                    if "text/html" in content_type or "text/plain" in content_type or not content_type:
+                        text = resp.text
+                    else:
+                        return f"Error: URL returned non-text content type: {content_type}"
+
+                    # Strip HTML and clean up
+                    clean = _strip_html(text)
+                    clean = re.sub(r"\n{3,}", "\n\n", clean)
+                    clean = re.sub(r" {2,}", " ", clean)
+                    clean = clean.strip()
+
+                    if not clean:
+                        return "Error: Page returned no readable text content."
+
+                    if len(clean) > _MAX_FETCH_CHARS:
+                        clean = clean[:_MAX_FETCH_CHARS] + f"\n\n... [truncated at {_MAX_FETCH_CHARS} chars]"
+
+                    return f"Content from {url}:\n\n{clean}"
+
+            except httpx.HTTPStatusError as exc:
+                logger.error("web_fetch HTTP error: {}", exc)
+                return f"Error: URL returned status {exc.response.status_code}."
+            except httpx.RequestError as exc:
+                logger.error("web_fetch request error: {}", exc)
+                return f"Error: Could not fetch URL — {exc}"
+            except Exception as exc:
+                logger.error("web_fetch unexpected error: {}", exc)
+                return f"Error: Failed to fetch URL — {exc}"
+
+        return last_error or "Error: Failed to fetch URL after retries."
 
 
 def _strip_html(html: str) -> str:

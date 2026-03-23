@@ -179,7 +179,7 @@ class SkillsLoader:
         for s in self.list_skills(filter_unavailable=True):
             meta = self.get_skill_metadata(s["name"]) or {}
             skill_meta = self._parse_claw_metadata(meta.get("metadata", ""))
-            if skill_meta.get("always") or meta.get("always"):
+            if skill_meta.get("always") is True or meta.get("always") == "true":
                 result.append(s["name"])
         logger.debug("Always-on skills: {}", result)
         return result
