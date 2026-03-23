@@ -97,7 +97,7 @@ coverage.xml
 # --- Reports / outputs (generated) ---
 reports/
 reproductions/
-memory/
+workspace/memory/
 
 # --- Docker volumes (local bind-mounts) ---
 mongo_data/
