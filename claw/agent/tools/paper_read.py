@@ -175,9 +175,6 @@ async def _fetch_by_arxiv_id(arxiv_id: str) -> dict | None:
         return data["results"][0]
 
     return None
-    if data and data.get("results"):
-        return data["results"][0]
-    return None
 
 
 async def _fetch_work(raw_id: str) -> dict | None:
