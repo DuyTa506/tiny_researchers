@@ -79,15 +79,11 @@ class TestImports:
         from claw.agent.context import ContextBuilder
         assert ContextBuilder
 
-    def test_research_tools(self):
-        from claw.agent.tools.paper_search import PaperSearchTool
-        from claw.agent.tools.paper_read import PaperReadTool
-        from claw.agent.tools.dataset_search import DatasetSearchTool
+    def test_core_tools(self):
         from claw.agent.tools.web import WebSearchTool, WebFetchTool
         from claw.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool
         from claw.agent.tools.exec_tool import ExecTool
-        assert all([PaperSearchTool, PaperReadTool, DatasetSearchTool,
-                    WebSearchTool, WebFetchTool, ReadFileTool, WriteFileTool,
+        assert all([WebSearchTool, WebFetchTool, ReadFileTool, WriteFileTool,
                     ListDirTool, ExecTool])
 
 
@@ -99,28 +95,23 @@ class TestToolRegistry:
 
     def _make_registry(self):
         from claw.agent.tools.registry import ToolRegistry
-        from claw.agent.tools.paper_search import PaperSearchTool
-        from claw.agent.tools.paper_read import PaperReadTool
-        from claw.agent.tools.dataset_search import DatasetSearchTool
         from claw.agent.tools.web import WebSearchTool, WebFetchTool
         from claw.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool
         from claw.agent.tools.exec_tool import ExecTool
 
         reg = ToolRegistry()
-        for t in [PaperSearchTool(), PaperReadTool(), DatasetSearchTool(),
-                  WebSearchTool(), WebFetchTool(), ReadFileTool(),
+        for t in [WebSearchTool(), WebFetchTool(), ReadFileTool(),
                   WriteFileTool(), ListDirTool(), ExecTool()]:
             reg.register(t)
         return reg
 
     def test_register_all(self):
         reg = self._make_registry()
-        assert len(reg) == 9
+        assert len(reg) == 6
 
     def test_expected_names(self):
         reg = self._make_registry()
         expected = {
-            "paper_search", "paper_read", "dataset_search",
             "web_search", "web_fetch",
             "read_file", "write_file", "list_dir", "exec",
         }
@@ -137,22 +128,22 @@ class TestToolRegistry:
             assert fn["parameters"]["type"] == "object"
 
     def test_param_validation_pass(self):
-        from claw.agent.tools.paper_search import PaperSearchTool
-        errs = PaperSearchTool().validate_params({"query": "transformers"})
+        from claw.agent.tools.web import WebSearchTool
+        errs = WebSearchTool().validate_params({"query": "transformers"})
         assert errs == []
 
     def test_param_validation_fail_missing_required(self):
-        from claw.agent.tools.paper_search import PaperSearchTool
-        errs = PaperSearchTool().validate_params({})
+        from claw.agent.tools.web import WebSearchTool
+        errs = WebSearchTool().validate_params({})
         assert len(errs) > 0
 
     def test_duplicate_register_raises(self):
         from claw.agent.tools.registry import ToolRegistry
-        from claw.agent.tools.paper_search import PaperSearchTool
+        from claw.agent.tools.web import WebSearchTool
         reg = ToolRegistry()
-        reg.register(PaperSearchTool())
+        reg.register(WebSearchTool())
         with pytest.raises(Exception):
-            reg.register(PaperSearchTool())
+            reg.register(WebSearchTool())
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -370,15 +361,15 @@ class TestAgentLoopInstantiation:
         from claw.agent.loop import AgentLoop
         agent = AgentLoop(workspace=ws)
         assert agent is not None
-        assert len(agent.tools) >= 9
+        assert len(agent.tools) >= 6
 
     def test_tools_registered(self, ws):
         from claw.agent.loop import AgentLoop
         agent = AgentLoop(workspace=ws)
         names = set(agent.tools.tool_names)
-        assert "paper_search" in names
         assert "exec" in names
         assert "read_file" in names
+        assert "web_search" in names
         assert "spawn" in names
 
     def test_status_command(self, ws):

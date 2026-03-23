@@ -33,13 +33,9 @@ from claw.agent.tools.registry import ToolRegistry
 from claw.agent.tools.filesystem import ReadFileTool, WriteFileTool, ListDirTool
 from claw.agent.tools.exec_tool import ExecTool
 from claw.agent.tools.web import WebSearchTool, WebFetchTool
-from claw.agent.tools.paper_search import PaperSearchTool
-from claw.agent.tools.paper_read import PaperReadTool
-from claw.agent.tools.dataset_search import DatasetSearchTool
 
 # Phase 2 — Reproduction tools (imported lazily to avoid hard dependency)
 try:
-    from claw.agent.tools.paper_fetch import PaperFetchTool
     from claw.agent.tools.env_builder import EnvBuilderTool
     from claw.agent.tools.dataset_download import DatasetDownloadTool
     from claw.agent.tools.code_gen import CodeGenTool
@@ -117,14 +113,8 @@ class AgentLoop:
         self.tools.register(WebSearchTool())
         self.tools.register(WebFetchTool())
 
-        # Research tools
-        self.tools.register(PaperSearchTool())
-        self.tools.register(PaperReadTool())
-        self.tools.register(DatasetSearchTool())
-
         # Phase 2 — Reproduction tools
         if _PHASE2_TOOLS_AVAILABLE:
-            self.tools.register(PaperFetchTool())
             self.tools.register(EnvBuilderTool())
             self.tools.register(DatasetDownloadTool())
             self.tools.register(CodeGenTool())
