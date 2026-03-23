@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__my-answer-engine__ask_internet",
+      "Bash(find:*)",
+      "Bash(pip install:*)",
+      "Bash(uv venv:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(xargs:*)",
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(.venvScriptspython.exe -c \"from claw.utils.helpers import split_message\")",
+      "Bash(echo:*)",
+      "Bash(\"E:\\\\New folder\\\\claw_researcher\\\\.venv\\\\Scripts\\\\python.exe\" --version)",
+      "Bash(\"E:\\\\New folder\\\\claw_researcher\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.path\\)\")",
+      "Bash(uv --version:*)",
+      "Bash(uv pip install:*)",
+      "Bash(\"E:\\\\New folder\\\\claw_researcher\\\\.venv\\\\Scripts\\\\python.exe\":*)",
+      "Bash(.venvScriptspython.exe -m pytest tests/test_interactive_smoke.py -v --tb=short)",
+      "Bash(cmd.exe /c \"cd /d \\\\\"E:\\\\New folder\\\\claw_researcher\\\\\" && .venv\\\\Scripts\\\\python.exe -m pytest tests/test_interactive_smoke.py -v --tb=short 2>&1\":*)",
+      "Bash(cmd.exe /c \"cd /d \\\\\"E:\\\\New folder\\\\claw_researcher\\\\\" && \\\\\".venv\\\\Scripts\\\\python.exe\\\\\" -m pytest tests/test_interactive_smoke.py -v --tb=short\" 2>&1:*)",
+      "Bash(powershell.exe -Command \"Set-Location ''E:\\\\New folder\\\\claw_researcher''; & ''.\\\\.venv\\\\Scripts\\\\python.exe'' -m pytest tests/test_interactive_smoke.py -v --tb=short 2>&1 | Tee-Object -Variable output; $output\")",
+      "Bash(powershell.exe:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(cmd /c \"dir /s /b /a:-d \"\"E:\\\\New folder\\\\claw_researcher\"\" 2>&1 | findstr /v \"\".venv\\\\\"\"\")",
+      "Bash(cmd /c \"cd /d \"\"E:\\\\New folder\\\\claw_researcher\"\" && dir /s /b /a:-d 2>&1 | findstr /v \"\".venv\\\\\"\"\")",
+      "Bash(cmd /c \"dir /s /b /a:-d \"\"E:\\\\New folder\\\\claw_researcher\"\"\")",
+      "Bash(cmd /c \"cd /d \"\"E:\\\\New folder\\\\claw_researcher\"\" && git status 2>&1\")",
+      "Bash(git -C \"E:\\\\New folder\\\\claw_researcher\" remote -v)",
+      "Bash(git remote add:*)",
+      "Bash(git init:*)"
+    ]
+  }
+}

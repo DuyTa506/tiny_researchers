@@ -1,0 +1,52 @@
+services:
+
+  # ── Main claw agent (CLI / chat mode) ──────────────────────────────────────
+  claw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: claw-researcher:latest
+    container_name: claw
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./workspace:/workspace        # persistent memory, skills, reports
+    # Override CMD to run interactive chat (attach a TTY for this one)
+    command: ["claw", "chat", "--workspace", "/workspace"]
+    stdin_open: true
+    tty: true
+    profiles:
+      - chat
+
+  # ── Multi-channel serve mode ────────────────────────────────────────────────
+  claw-serve:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: claw-researcher:latest
+    container_name: claw-serve
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./workspace:/workspace        # channels.json lives here
+    ports:
+      - "${WEBHOOK_PORT:-8080}:8080"  # Messenger / Zalo webhooks
+    command:
+      - claw
+      - serve
+      - --workspace
+      - /workspace
+      - --webhook-host
+      - "0.0.0.0"
+      - --webhook-port
+      - "8080"
+    profiles:
+      - serve
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
